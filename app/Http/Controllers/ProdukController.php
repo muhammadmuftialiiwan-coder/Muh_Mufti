@@ -4,17 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Produk;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller; // Tambahkan ini
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth; // Wajib ditambah untuk cek login
 
 class ProdukController extends Controller
 {
-    // ✅ Tampilkan data
+    // ✅ Tampilkan data (Bisa diakses semua user yang login)
     public function index()
     {
         return Produk::all();
     }
 
-    // ✅ Tambah data + validasi + error handling
+    // ✅ Tambah data (Bisa diakses semua user yang login)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -28,7 +29,7 @@ class ProdukController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Gagal tambah data'
-            ]);
+            ], 500);
         }
     }
 
@@ -41,12 +42,19 @@ class ProdukController extends Controller
         return $produk;
     }
 
-    // ✅ Hapus data
+    // ✅ Hapus data (KHUSUS ADMIN)
     public function destroy($id)
     {
+        // Pengecekan Otorisasi
+        if (Auth::user()->role !== 'admin') {
+            return response()->json([
+                'message' => 'Akses ditolak! Anda bukan Admin.'
+            ], 403); // Error 403 artinya Forbidden (Dilarang)
+        }
+
         Produk::destroy($id);
         return response()->json([
-            'message' => 'Data berhasil dihapus'
+            'message' => 'Data berhasil dihapus oleh Admin'
         ]);
     }
 }
